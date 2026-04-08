@@ -1,14 +1,20 @@
 @import "tailwindcss";
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
 
 body {
-  background-color: #0a0d14;
+  height: 100%;
+  background-color: #070a12;
   color: #f1f5f9;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
+
+#root { height: 100%; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -16,15 +22,16 @@ body {
 ::-webkit-scrollbar-thumb { background: #1e2d45; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #2a3d5a; }
 
-/* Focus ring */
-input:focus, select:focus, textarea:focus, button:focus-visible {
+/* Focus ring — keyboard only */
+button:focus-visible, a:focus-visible {
   outline: 2px solid #3b82f6;
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
+input:focus, select:focus, textarea:focus { outline: none; }
 
 /* Animations */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
@@ -39,16 +46,16 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   to { transform: rotate(360deg); }
 }
 
-.animate-fade-in-up { animation: fadeInUp 0.35s ease both; }
-.animate-fade-in    { animation: fadeIn   0.25s ease both; }
+.animate-fade-in-up { animation: fadeInUp 0.3s ease both; }
+.animate-fade-in    { animation: fadeIn  0.2s ease both; }
 
-/* Stagger children */
-.stagger > *:nth-child(1) { animation-delay: 0.04s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
-.stagger > *:nth-child(2) { animation-delay: 0.08s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
-.stagger > *:nth-child(3) { animation-delay: 0.12s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
-.stagger > *:nth-child(4) { animation-delay: 0.16s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
-.stagger > *:nth-child(5) { animation-delay: 0.20s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
-.stagger > *:nth-child(6) { animation-delay: 0.24s; opacity: 0; animation-fill-mode: both; animation-name: fadeInUp; animation-duration: 0.35s; }
+/* Stagger */
+.stagger > *:nth-child(1) { animation: fadeInUp 0.3s 0.04s ease both; opacity: 0; }
+.stagger > *:nth-child(2) { animation: fadeInUp 0.3s 0.08s ease both; opacity: 0; }
+.stagger > *:nth-child(3) { animation: fadeInUp 0.3s 0.12s ease both; opacity: 0; }
+.stagger > *:nth-child(4) { animation: fadeInUp 0.3s 0.16s ease both; opacity: 0; }
+.stagger > *:nth-child(5) { animation: fadeInUp 0.3s 0.20s ease both; opacity: 0; }
+.stagger > *:nth-child(6) { animation: fadeInUp 0.3s 0.24s ease both; opacity: 0; }
 
 /* Sidebar active link */
 .nav-active {
@@ -57,7 +64,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   padding-left: calc(0.75rem - 2px) !important;
 }
 
-/* Glass morphism */
+/* Glassmorphism */
 .glass {
   background: rgba(19, 25, 41, 0.75);
   backdrop-filter: blur(12px);
@@ -65,7 +72,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   border: 1px solid rgba(30, 45, 69, 0.8);
 }
 
-/* Skeleton loader */
+/* Skeleton */
 .skeleton {
   background: linear-gradient(90deg, #1a2235 25%, #1e2d45 50%, #1a2235 75%);
   background-size: 200% 100%;
@@ -73,10 +80,15 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   border-radius: 6px;
 }
 
-/* Number font for financial figures */
-.font-mono { font-family: 'DM Mono', 'Fira Code', monospace; }
+/* Monospace for numbers */
+.font-mono { font-family: 'DM Mono', 'Fira Code', ui-monospace, monospace; }
 
-/* Hide number input spinners */
+/* Hide number spinners */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
+
+/* Mobile sidebar fix */
+@media (max-width: 1023px) {
+  .lg\:flex { display: none !important; }
+}
