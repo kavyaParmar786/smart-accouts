@@ -1,6 +1,4 @@
 // Vercel Serverless Entry Point
-// This file wraps the Express app for Vercel's serverless environment
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -19,9 +17,6 @@ const categoryRoutes = require('../server/routes/category.routes');
 const { errorHandler } = require('../server/middleware/error.middleware');
 
 const app = express();
-
-// Connect to MongoDB (cached for serverless - won't reconnect on every request)
-connectDB();
 
 // Security middleware
 app.use(helmet());
@@ -42,6 +37,17 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+
+// ✅ Middleware that awaits DB connection on EVERY request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('DB connection failed:', err.message);
+    res.status(503).json({ success: false, message: 'Database unavailable' });
+  }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
