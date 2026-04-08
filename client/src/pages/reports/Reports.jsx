@@ -167,7 +167,7 @@ export default function Reports() {
               </Card>
               <Card>
                 <p className="text-sm font-semibold text-white mb-4">Month-by-Month Summary</p>
-                <div className="overflow-x-auto">
+                <div className="table-scroll-wrap">
                   <table className="w-full text-xs">
                     <thead><tr className="border-b border-[#1e2d45]">
                       {['Month','Income','Expenses','Profit','Margin'].map(h => <th key={h} className="px-4 py-2.5 text-left text-slate-500 font-semibold">{h}</th>)}

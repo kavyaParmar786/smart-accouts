@@ -162,7 +162,7 @@ export const StatCard = ({ label, value, icon, change, changeLabel, color = 'blu
 };
 
 export const Table = ({ columns, data, loading, onRowClick, emptyState, emptyIcon }) => (
-  <div className="overflow-x-auto">
+  <div className="table-scroll-wrap">
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-[#1e2d45]">
