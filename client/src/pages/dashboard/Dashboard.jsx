@@ -2,16 +2,45 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown, DollarSign, FileText,
-  Package, Zap, Plus, ArrowUpRight, BarChart3,
+  Package, Zap, Plus, BarChart3,
 } from 'lucide-react';
 import { reportAPI } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import {
   StatCard, Card, Badge, Button, AlertBanner, PageLoader,
 } from '../../components/ui/index.jsx';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { formatCurrency } from '../../utils/helpers';
 import RevenueChart from '../../components/charts/RevenueChart.jsx';
 import ExpenseDonut from '../../components/charts/ExpenseDonut.jsx';
+
+/* Inline card-section header — no external dep needed */
+function SectionHeader({ title, subtitle, action }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{title}</p>
+        {subtitle && <p style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{subtitle}</p>}
+      </div>
+      {action && <div style={{ display: 'flex', alignItems: 'center' }}>{action}</div>}
+    </div>
+  );
+}
+
+const QUICK_ACTIONS = [
+  { label: 'Record Income',  sub: 'Log a sale',          emoji: '💚', to: '/transactions', bg: 'rgba(16,185,129,0.1)',  color: '#34d399' },
+  { label: 'Record Expense', sub: 'Add a cost',           emoji: '🔴', to: '/transactions', bg: 'rgba(239,68,68,0.1)',   color: '#f87171' },
+  { label: 'Create Invoice', sub: 'Bill customers',       emoji: '🧾', to: '/invoices',     bg: 'rgba(59,130,246,0.1)',  color: '#60a5fa' },
+  { label: 'Add Product',    sub: 'Update inventory',     emoji: '📦', to: '/inventory',    bg: 'rgba(139,92,246,0.1)', color: '#a78bfa' },
+  { label: 'View Ledger',    sub: 'Running balance',      emoji: '📒', to: '/ledger',       bg: 'rgba(245,158,11,0.1)', color: '#fbbf24' },
+  { label: 'Run Report',     sub: 'P&L and analytics',    emoji: '📊', to: '/reports',      bg: 'rgba(99,102,241,0.1)', color: '#818cf8' },
+];
+
+const INV_ROWS = [
+  { label: 'Paid',        key: 'paid',    amt: r => r?.amounts?.paid    || 0,                color: '#34d399', dot: '#10b981' },
+  { label: 'Outstanding', key: 'sent',    amt: r => r?.totalOutstanding || 0,                color: '#60a5fa', dot: '#3b82f6' },
+  { label: 'Overdue',     key: 'overdue', amt: r => r?.amounts?.overdue || 0,                color: '#f87171', dot: '#ef4444' },
+  { label: 'Draft',       key: 'draft',   amt: r => r?.amounts?.draft   || 0,                color: '#475569', dot: '#334155' },
+];
 
 export default function Dashboard() {
   const { getBusinessId, activeBusiness } = useAuthStore();
@@ -31,11 +60,11 @@ export default function Dashboard() {
 
   if (!businessId) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <p className="text-4xl mb-3">🏢</p>
-          <p className="text-slate-300 font-medium mb-1">No business selected</p>
-          <p className="text-slate-600 text-sm mb-4">Create or switch to a business to get started</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 24 }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 40, marginBottom: 12 }}>🏢</p>
+          <p style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0', marginBottom: 6 }}>No business selected</p>
+          <p style={{ fontSize: 13, color: '#475569', marginBottom: 20 }}>Create or switch to a business to get started</p>
           <Button onClick={() => navigate('/settings')}>Go to Settings</Button>
         </div>
       </div>
@@ -44,99 +73,71 @@ export default function Dashboard() {
 
   const cur     = stats?.currentMonth;
   const changes = stats?.changes;
-
-  const QUICK_ACTIONS = [
-    { label: 'Record Income',  sub: 'Log a sale or receipt',   icon: '💚', to: '/transactions', color: 'text-emerald-400 bg-emerald-500/10' },
-    { label: 'Record Expense', sub: 'Add a business cost',      icon: '🔴', to: '/transactions', color: 'text-red-400    bg-red-500/10'     },
-    { label: 'Create Invoice', sub: 'Bill your customers',      icon: '🧾', to: '/invoices',     color: 'text-blue-400  bg-blue-500/10'     },
-    { label: 'Add Product',    sub: 'Update your inventory',    icon: '📦', to: '/inventory',    color: 'text-purple-400 bg-purple-500/10'  },
-    { label: 'View Ledger',    sub: 'Running balance view',     icon: '📒', to: '/ledger',       color: 'text-amber-400  bg-amber-500/10'   },
-    { label: 'Run Report',     sub: 'P&L and analytics',        icon: '📊', to: '/reports',      color: 'text-indigo-400 bg-indigo-500/10'  },
-  ];
+  const inv     = stats?.invoices;
 
   return (
-    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+    <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
 
-      {/* ── Page header ─────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* ── Header ───────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Dashboard</h1>
+          <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
             {activeBusiness?.name || 'Business'} &middot; {cur?.month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" icon={<FileText size={13} />} onClick={() => navigate('/invoices')}>
-            New Invoice
-          </Button>
-          <Button size="sm" icon={<Plus size={13} />} onClick={() => navigate('/transactions')}>
-            Add Transaction
-          </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" size="sm" icon={<FileText size={13} />} onClick={() => navigate('/invoices')}>New Invoice</Button>
+          <Button size="sm" icon={<Plus size={13} />} onClick={() => navigate('/transactions')}>Add Transaction</Button>
         </div>
       </div>
 
-      {/* ── AI Insights ─────────────────────────────────── */}
+      {/* ── AI Insights ──────────────────────────────────── */}
       {stats?.insights?.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10, marginBottom: 24 }}>
           {stats.insights.map((ins, i) => (
             <AlertBanner key={i} type={ins.type} icon={ins.icon} message={ins.message} />
           ))}
         </div>
       )}
 
-      {/* ── Stat cards ──────────────────────────────────── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 stagger">
-        <StatCard
-          label="Total Income"    color="green"
-          value={loading ? '—' : formatCurrency(cur?.income)}
-          change={changes?.income}   changeLabel="vs last month"
-          icon={<TrendingUp  size={17} />} loading={loading}
-        />
-        <StatCard
-          label="Total Expenses"  color="red"
-          value={loading ? '—' : formatCurrency(cur?.expenses)}
-          change={changes?.expenses} changeLabel="vs last month"
-          icon={<TrendingDown size={17} />} loading={loading}
-        />
-        <StatCard
-          label="Net Profit"      color="blue"
-          value={loading ? '—' : formatCurrency(cur?.profit)}
-          change={changes?.profit}   changeLabel="vs last month"
-          icon={<DollarSign  size={17} />} loading={loading}
-        />
-        <StatCard
-          label="Outstanding"     color="amber"
-          value={loading ? '—' : formatCurrency(stats?.invoices?.totalOutstanding)}
-          sublabel={stats?.invoices?.overdueCount ? `${stats.invoices.overdueCount} overdue` : 'None overdue'}
-          icon={<FileText    size={17} />} loading={loading}
-        />
+      {/* ── Stat cards ───────────────────────────────────── */}
+      <div className="stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <StatCard label="Total Income"    color="green"  value={loading ? '—' : formatCurrency(cur?.income)}   change={changes?.income}   changeLabel="vs last month" icon={<TrendingUp  size={17} />} loading={loading} />
+        <StatCard label="Total Expenses"  color="red"    value={loading ? '—' : formatCurrency(cur?.expenses)} change={changes?.expenses} changeLabel="vs last month" icon={<TrendingDown size={17} />} loading={loading} />
+        <StatCard label="Net Profit"      color="blue"   value={loading ? '—' : formatCurrency(cur?.profit)}   change={changes?.profit}   changeLabel="vs last month" icon={<DollarSign  size={17} />} loading={loading} />
+        <StatCard label="Outstanding"     color="amber"  value={loading ? '—' : formatCurrency(inv?.totalOutstanding)}
+          sublabel={inv?.overdueCount ? `${inv.overdueCount} overdue` : 'None overdue'}
+          icon={<FileText size={17} />} loading={loading} />
       </div>
 
-      {/* ── Charts ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2">
-          <RevenueChart businessId={businessId} />
-        </div>
-        <ExpenseDonut businessId={businessId} />
+      {/* ── Charts ───────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div style={{ minWidth: 0 }}><RevenueChart businessId={businessId} /></div>
+        <div style={{ minWidth: 0 }}><ExpenseDonut businessId={businessId} /></div>
       </div>
 
-      {/* ── Bottom grid ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* ── Bottom grid ──────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
 
         {/* Quick actions */}
         <Card>
-          <SectionHeader title="Quick Actions" subtitle="Jump to common tasks" className="mb-4"
-            action={<Zap size={14} className="text-amber-400" />} />
-          <div className="grid grid-cols-2 gap-2">
-            {QUICK_ACTIONS.map(({ label, sub, icon, to, color }) => (
-              <button key={label} onClick={() => navigate(to)}
-                className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-[#0f1826] border border-transparent hover:border-[#1a2540] transition-all text-left group">
-                <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center text-base flex-shrink-0`}>
-                  {icon}
+          <SectionHeader title="Quick Actions" subtitle="Jump to common tasks" action={<Zap size={14} style={{ color: '#fbbf24' }} />} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {QUICK_ACTIONS.map(({ label, sub, emoji, to, bg, color }) => (
+              <button
+                key={label}
+                onClick={() => navigate(to)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'transparent', border: '1px solid transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', width: '100%' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#0f1826'; e.currentTarget.style.borderColor = '#1a2540'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+              >
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>
+                  {emoji}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-200 truncate">{label}</p>
-                  <p className="text-[10px] text-slate-600 truncate">{sub}</p>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</p>
+                  <p style={{ fontSize: 10, color: '#475569', margin: 0, marginTop: 1 }}>{sub}</p>
                 </div>
               </button>
             ))}
@@ -145,62 +146,66 @@ export default function Dashboard() {
 
         {/* Invoice summary */}
         <Card>
-          <SectionHeader title="Invoice Summary" className="mb-4" action={<FileText size={14} className="text-blue-400" />} />
-          {loading
-            ? <div className="space-y-2.5">{[...Array(4)].map((_,i) => <div key={i} className="skeleton h-9 rounded-xl" />)}</div>
-            : (
-              <div className="space-y-1">
-                {[
-                  { label: 'Paid',        count: stats?.invoices?.counts?.paid    || 0, amount: stats?.invoices?.amounts?.paid    || 0, color: 'emerald' },
-                  { label: 'Outstanding', count: stats?.invoices?.counts?.sent    || 0, amount: stats?.invoices?.totalOutstanding || 0, color: 'blue'    },
-                  { label: 'Overdue',     count: stats?.invoices?.overdueCount    || 0, amount: stats?.invoices?.amounts?.overdue || 0, color: 'red'      },
-                  { label: 'Draft',       count: stats?.invoices?.counts?.draft   || 0, amount: stats?.invoices?.amounts?.draft   || 0, color: 'slate'    },
-                ].map(({ label, count, amount, color }) => {
-                  const c = { emerald:'text-emerald-400', blue:'text-blue-400', red:'text-red-400', slate:'text-slate-500' };
-                  const d = { emerald:'bg-emerald-400', blue:'bg-blue-400', red:'bg-red-400', slate:'bg-slate-600' };
-                  return (
-                    <div key={label} className="flex items-center gap-2.5 py-2.5 border-b border-[#1a2540]/50 last:border-0">
-                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${d[color]}`} />
-                      <span className="text-xs text-slate-400 flex-1">{label}</span>
-                      <span className="text-xs text-slate-600">×{count}</span>
-                      <span className={`text-xs font-semibold tabular ${c[color]}`}>{formatCurrency(amount)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )
-          }
-          <Button variant="ghost" size="sm" className="w-full mt-3 text-slate-500" onClick={() => navigate('/invoices')}>
+          <SectionHeader title="Invoice Summary" action={<FileText size={14} style={{ color: '#60a5fa' }} />} />
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 36, borderRadius: 10 }} />)}
+            </div>
+          ) : (
+            <div>
+              {INV_ROWS.map(({ label, key, amt, color, dot }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(26,37,64,0.5)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: '#94a3b8', flex: 1 }}>{label}</span>
+                  <span style={{ fontSize: 10, color: '#334155' }}>×{inv?.counts?.[key] || 0}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(amt(inv))}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => navigate('/invoices')}
+            style={{ width: '100%', marginTop: 12, color: '#475569' }}
+          >
             View All Invoices →
           </Button>
         </Card>
 
         {/* Low stock */}
         <Card>
-          <SectionHeader title="Inventory Alerts" className="mb-4"
+          <SectionHeader
+            title="Inventory Alerts"
             action={
+              loading ? null :
               stats?.lowStockCount > 0
                 ? <Badge variant="danger">{stats.lowStockCount} low</Badge>
                 : <Badge variant="success">Healthy</Badge>
-            } />
-          {loading
-            ? <div className="space-y-2">{[...Array(3)].map((_,i) => <div key={i} className="skeleton h-10 rounded-xl" />)}</div>
-            : stats?.lowStockCount === 0
-              ? (
-                <div className="text-center py-6">
-                  <p className="text-3xl mb-2 select-none">✅</p>
-                  <p className="text-xs text-slate-500">All stock levels healthy</p>
-                </div>
-              )
-              : (
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-600 mb-3">{stats.lowStockCount} item(s) need restocking</p>
-                  <Button size="sm" variant="warning" className="w-full" onClick={() => navigate('/inventory?filter=lowStock')}>
-                    View Low Stock Items
-                  </Button>
-                </div>
-              )
-          }
+            }
+          />
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 40, borderRadius: 10 }} />)}
+            </div>
+          ) : stats?.lowStockCount === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <p style={{ fontSize: 32, marginBottom: 8 }}>✅</p>
+              <p style={{ fontSize: 12, color: '#475569' }}>All stock levels are healthy</p>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>
+                {stats.lowStockCount} item(s) need restocking soon
+              </p>
+              <Button
+                size="sm" variant="warning"
+                onClick={() => navigate('/inventory')}
+                style={{ width: '100%' }}
+              >
+                <Package size={13} /> View Low Stock Items
+              </Button>
+            </div>
+          )}
         </Card>
 
       </div>

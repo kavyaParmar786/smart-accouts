@@ -1,15 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import AppLayout from './components/layout/AppLayout.jsx';
-import Login from './pages/auth/Login.jsx';
-import Register from './pages/auth/Register.jsx';
-import Dashboard from './pages/dashboard/Dashboard.jsx';
+import Login        from './pages/auth/Login.jsx';
+import Register     from './pages/auth/Register.jsx';
+import Dashboard    from './pages/dashboard/Dashboard.jsx';
 import Transactions from './pages/transactions/Transactions.jsx';
-import Ledger from './pages/ledger/Ledger.jsx';
-import Invoices from './pages/invoices/Invoices.jsx';
-import Inventory from './pages/inventory/Inventory.jsx';
-import Reports from './pages/reports/Reports.jsx';
-import Settings from './pages/settings/Settings.jsx';
+import Ledger       from './pages/ledger/Ledger.jsx';
+import Invoices     from './pages/invoices/Invoices.jsx';
+import Inventory    from './pages/inventory/Inventory.jsx';
+import Reports      from './pages/reports/Reports.jsx';
+import Settings     from './pages/settings/Settings.jsx';
 
 function ProtectedRoute({ children }) {
   const { token } = useAuthStore();
@@ -25,7 +25,12 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/login"        element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register"     element={<PublicRoute><Register /></PublicRoute>} />
