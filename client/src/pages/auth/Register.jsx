@@ -3,20 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Sparkles, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { Button, Input, Select } from '../../components/ui/index.jsx';
 import toast from 'react-hot-toast';
-
-const inputStyle = (hasError) => ({
-  width: '100%', background: '#0f1420',
-  border: `1px solid ${hasError ? 'rgba(239,68,68,0.5)' : '#1e2d45'}`,
-  borderRadius: 12, fontSize: 14, color: '#e2e8f0',
-  paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 12,
-  outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s',
-});
-
-const labelStyle = {
-  fontSize: 11, fontWeight: 600, color: '#64748b',
-  textTransform: 'uppercase', letterSpacing: '0.08em',
-};
 
 export default function Register() {
   const navigate = useNavigate();
@@ -53,114 +41,51 @@ export default function Register() {
   };
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-  const focusBlue = (e) => { e.target.style.borderColor = '#3b82f6'; };
-  const blurGray  = (e) => { e.target.style.borderColor = errors[e.target.name] ? 'rgba(239,68,68,0.5)' : '#1e2d45'; };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#070a12', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
-
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sparkles size={15} color="white" />
-          </div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>SmartAccounts</p>
+    <div className="min-h-screen bg-[#0a0d14] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center"><Sparkles size={14} className="text-white" /></div>
+          <p className="text-base font-bold text-white">SmartAccounts</p>
         </div>
-
-        {/* Heading */}
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 26, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Create your account</h2>
-          <p style={{ fontSize: 14, color: '#64748b' }}>Start managing your finances smarter, today.</p>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-1.5">Create your account</h2>
+          <p className="text-slate-500 text-sm">Start managing your finances smarter, today.</p>
         </div>
-
-        {/* General error */}
-        {errors.general && (
-          <div style={{ marginBottom: 20, padding: '14px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 13, color: '#f87171' }}>
-            {errors.general}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Name */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={labelStyle}>Full Name</label>
-            <div style={{ position: 'relative' }}>
-              <User size={14} color="#475569" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input name="name" type="text" placeholder="John Doe" value={form.name} onChange={set('name')} autoComplete="name"
-                style={inputStyle(errors.name)} onFocus={focusBlue} onBlur={blurGray} />
-            </div>
-            {errors.name && <p style={{ fontSize: 12, color: '#f87171' }}>{errors.name}</p>}
-          </div>
-
-          {/* Email */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={labelStyle}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={14} color="#475569" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input name="email" type="email" placeholder="you@company.com" value={form.email} onChange={set('email')} autoComplete="email"
-                style={inputStyle(errors.email)} onFocus={focusBlue} onBlur={blurGray} />
-            </div>
-            {errors.email && <p style={{ fontSize: 12, color: '#f87171' }}>{errors.email}</p>}
-          </div>
-
-          {/* Password */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={labelStyle}>Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={14} color="#475569" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input name="password" type={showPw ? 'text' : 'password'} placeholder="Min. 6 characters" value={form.password}
+        {errors.general && <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">{errors.general}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Full Name" type="text" placeholder="John Doe" icon={<User size={14} />}
+            value={form.name} onChange={set('name')} error={errors.name} autoComplete="name" />
+          <Input label="Email Address" type="email" placeholder="you@company.com" icon={<Mail size={14} />}
+            value={form.email} onChange={set('email')} error={errors.email} autoComplete="email" />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Password</label>
+            <div className="relative">
+              <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input type={showPw ? 'text' : 'password'} placeholder="Min. 6 characters" value={form.password}
                 onChange={set('password')} autoComplete="new-password"
-                style={{ ...inputStyle(errors.password), paddingRight: 44 }} onFocus={focusBlue} onBlur={blurGray} />
-              <button type="button" onClick={() => setShowPw(p => !p)}
-                style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0 }}>
+                className={`w-full bg-[#0f1420] border rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all pl-10 pr-10 py-2.5 ${errors.password ? 'border-red-500/50' : 'border-[#1e2d45]'}`} />
+              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
                 {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
-            {errors.password && <p style={{ fontSize: 12, color: '#f87171' }}>{errors.password}</p>}
+            {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
           </div>
-
-          {/* Confirm Password */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={labelStyle}>Confirm Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={14} color="#475569" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input name="confirmPassword" type="password" placeholder="Repeat your password" value={form.confirmPassword}
-                onChange={set('confirmPassword')} autoComplete="new-password"
-                style={inputStyle(errors.confirmPassword)} onFocus={focusBlue} onBlur={blurGray} />
-            </div>
-            {errors.confirmPassword && <p style={{ fontSize: 12, color: '#f87171' }}>{errors.confirmPassword}</p>}
-          </div>
-
-          {/* Role */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={labelStyle}>Account Role</label>
-            <select value={form.role} onChange={set('role')}
-              style={{ width: '100%', background: '#0f1420', border: '1px solid #1e2d45', borderRadius: 12, fontSize: 14, color: '#e2e8f0', padding: '12px 16px', outline: 'none', boxSizing: 'border-box', appearance: 'none' }}>
-              <option value="admin">Admin — Full access</option>
-              <option value="staff">Staff — Limited access</option>
-            </select>
-          </div>
-
-          {/* Submit */}
-          <button type="submit" disabled={loading}
-            style={{ width: '100%', background: loading ? '#1d4ed8' : '#2563eb', color: '#fff', border: 'none', borderRadius: 12, padding: '13px 24px', fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 4 }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#1d4ed8'; }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#2563eb'; }}>
-            {loading ? 'Creating account...' : <><span>Create Account</span><ArrowRight size={16} /></>}
-          </button>
+          <Input label="Confirm Password" type="password" placeholder="Repeat your password" icon={<Lock size={14} />}
+            value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} autoComplete="new-password" />
+          <Select label="Account Role" value={form.role} onChange={set('role')}>
+            <option value="admin">Admin — Full access</option>
+            <option value="staff">Staff — Limited access</option>
+          </Select>
+          <Button type="submit" loading={loading} className="w-full" size="lg" icon={!loading && <ArrowRight size={16} />}>
+            {loading ? 'Creating account...' : 'Create Account'}
+          </Button>
         </form>
-
-        {/* Links */}
-        <p style={{ marginTop: 24, textAlign: 'center', fontSize: 14, color: '#64748b' }}>
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: '#60a5fa', fontWeight: 500, textDecoration: 'none' }}>Sign in</Link>
+        <p className="mt-6 text-sm text-slate-500 text-center">
+          Already have an account?{' '}<Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium">Sign in</Link>
         </p>
-        <p style={{ marginTop: 12, textAlign: 'center', fontSize: 12, color: '#334155' }}>
-          By registering, you agree to our Terms of Service and Privacy Policy.
-        </p>
+        <p className="mt-4 text-xs text-slate-600 text-center">By registering, you agree to our Terms of Service and Privacy Policy.</p>
       </div>
     </div>
   );

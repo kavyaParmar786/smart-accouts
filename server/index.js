@@ -14,6 +14,7 @@ const invoiceRoutes = require('./routes/invoice.routes');
 const inventoryRoutes = require('./routes/inventory.routes');
 const reportRoutes = require('./routes/report.routes');
 const categoryRoutes = require('./routes/category.routes');
+const teamRoutes      = require('./routes/team.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/team',       teamRoutes);
 
 // Global error handler
 app.use(errorHandler);

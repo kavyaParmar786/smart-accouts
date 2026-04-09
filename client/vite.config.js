@@ -10,7 +10,6 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Only used in local dev - in production Vercel rewrites handle /api
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
