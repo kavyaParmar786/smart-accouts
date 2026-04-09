@@ -7,7 +7,7 @@ import {
 import { reportAPI } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import {
-  StatCard, Card, Badge, Button, AlertBanner, PageLoader, SectionHeader,
+  StatCard, Card, Badge, Button, AlertBanner, PageLoader,
 } from '../../components/ui/index.jsx';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import RevenueChart from '../../components/charts/RevenueChart.jsx';
