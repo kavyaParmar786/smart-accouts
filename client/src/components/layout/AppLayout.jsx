@@ -1,114 +1,118 @@
-/**
- * AppLayout — Main shell: sidebar + header + content
- * Fixed: overflow conflicts, height issues, mobile glitches
- */
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  LayoutDashboard, ArrowLeftRight, FileText, Package,
-  BarChart3, Settings, LogOut, ChevronDown, Building2,
-  Bell, Search, Menu, X, Sparkles, BookOpen,
-} from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, FileText, Package, BarChart3, Settings, LogOut, ChevronDown, Building2, Bell, Search, Menu, X, Sparkles, BookOpen, Users, HelpCircle, Scale } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authAPI } from '../../services/api';
-import { cn, getInitials } from '../../utils/helpers';
+import { getInitials } from '../../utils/helpers';
+import { T } from '../ui/index.jsx';
 import NotificationPanel from './NotificationPanel.jsx';
 import toast from 'react-hot-toast';
 
 const NAV = [
-  { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard'           },
-  { to: '/transactions', icon: ArrowLeftRight,  label: 'Transactions'        },
-  { to: '/ledger',       icon: BookOpen,        label: 'Ledger'              },
-  { to: '/invoices',     icon: FileText,        label: 'Invoices'            },
-  { to: '/inventory',    icon: Package,         label: 'Inventory'           },
-  { to: '/reports',      icon: BarChart3,       label: 'Reports & Analytics' },
-  { to: '/settings',     icon: Settings,        label: 'Settings'            },
+  { to: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard'    },
+  { to: '/transactions',  icon: ArrowLeftRight,  label: 'Transactions' },
+  { to: '/ledger',        icon: BookOpen,        label: 'Ledger'       },
+  { to: '/invoices',      icon: FileText,        label: 'Invoices'     },
+  { to: '/inventory',     icon: Package,         label: 'Inventory'    },
+  { to: '/reports',       icon: BarChart3,       label: 'Reports'      },
+  { to: '/balance-sheet', icon: Scale,           label: 'Balance Sheet'},
+];
+const NAV2 = [
+  { to: '/team',     icon: Users,      label: 'Team'      },
+  { to: '/guide',    icon: HelpCircle, label: 'User Guide'},
+  { to: '/settings', icon: Settings,   label: 'Settings'  },
 ];
 
-/* ─── Sidebar inner content ─────────────────────────────────────── */
+const FONT = "'Sora', ui-sans-serif, system-ui, sans-serif";
+
 function SidebarContent({ onClose }) {
   const [bizOpen, setBizOpen] = useState(false);
   const { user, activeBusiness, logout, setActiveBusiness } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-    toast.success('Logged out');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); toast.success('Logged out'); };
 
   const handleSwitch = async (id) => {
     try {
       const res = await authAPI.switchBusiness(id);
       setActiveBusiness(res.data.data.activeBusiness);
-      setBizOpen(false);
-      toast.success('Business switched');
+      setBizOpen(false); toast.success('Business switched');
       window.location.reload();
     } catch {}
   };
 
   const businesses = user?.businesses || [];
-  const bizName    = activeBusiness?.name || 'My Business';
-  const activeId   = activeBusiness?._id  || activeBusiness;
+  const bizName = activeBusiness?.name || 'My Business';
+  const activeId = activeBusiness?._id || activeBusiness;
+
+  const NavItem = ({ to, icon: Icon, label }) => (
+    <NavLink to={to} onClick={() => onClose?.()}
+      className={({ isActive }) => isActive ? 'nav-active' : ''}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, textDecoration: 'none', marginBottom: 1, transition: 'all 0.15s', color: T.t3 }}
+      onMouseEnter={e => { if (!e.currentTarget.classList.contains('nav-active')) e.currentTarget.style.background = T.hover; }}
+      onMouseLeave={e => { if (!e.currentTarget.classList.contains('nav-active')) e.currentTarget.style.background = 'transparent'; }}
+    >
+      {({ isActive }) => (
+        <>
+          <Icon size={14} className="nav-icon" style={{ color: isActive ? T.blue : T.t3, flexShrink: 0 }} />
+          <span className="nav-label" style={{ fontSize: 12, fontWeight: 600, color: isActive ? T.t1 : T.t3, fontFamily: FONT }}>{label}</span>
+        </>
+      )}
+    </NavLink>
+  );
 
   return (
-    /* This div must fill its parent — sidebar controls the height */
-    <div className="flex flex-col" style={{ height: '100%', overflow: 'hidden' }}>
-
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Logo */}
-      <div style={{ flexShrink: 0 }} className="px-4 py-4 border-b border-[#1a2540]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-950/60 flex-shrink-0">
-            <Sparkles size={14} className="text-white" />
+      <div style={{ padding: '18px 16px 14px', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #3b7eff 0%, #9b6dff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(59,126,255,0.4)', flexShrink: 0 }}>
+            <Sparkles size={14} color="#fff" />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-white leading-tight">SmartAccounts</p>
-            <p className="text-[10px] text-blue-400 font-medium">AI-Powered SaaS</p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: T.t1, fontFamily: FONT, letterSpacing: '-0.03em', lineHeight: 1 }}>SmartAccounts</p>
+            <p style={{ fontSize: 9, color: T.blue, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>AI-Powered SaaS</p>
           </div>
         </div>
       </div>
 
       {/* Business switcher */}
-      <div style={{ flexShrink: 0 }} className="px-3 py-2 border-b border-[#1a2540]">
-        <button
-          onClick={() => setBizOpen(o => !o)}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#111827] transition-colors text-left"
+      <div style={{ padding: '10px 10px 6px', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <button onClick={() => setBizOpen(o => !o)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, background: 'transparent', border: 'none', cursor: 'pointer', transition: 'background 0.15s', textAlign: 'left' }}
+          onMouseEnter={e => e.currentTarget.style.background = T.hover}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0">
-            <Building2 size={12} className="text-white" />
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#9b6dff,#6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Building2 size={13} color="#fff" />
           </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <p className="text-xs font-semibold text-slate-200 truncate">{bizName}</p>
-            <p className="text-[10px] text-slate-500">Active Business</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: T.t1, fontFamily: FONT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bizName}</p>
+            <p style={{ fontSize: 10, color: T.t3 }}>Active business</p>
           </div>
-          <ChevronDown
-            size={12}
-            className="text-slate-500 flex-shrink-0 transition-transform duration-200"
-            style={{ transform: bizOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-          />
+          <ChevronDown size={12} color={T.t3} style={{ flexShrink: 0, transition: 'transform 0.2s', transform: bizOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
         </button>
 
         {bizOpen && (
-          <div className="mt-1 rounded-xl border border-[#1a2540] overflow-hidden" style={{ background: '#060a11' }}>
+          <div className="anim-up" style={{ marginTop: 4, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
             {businesses.map(({ business: b }) => {
-              const id   = b?._id || b;
-              const name = b?.name  || 'Business';
-              const yes  = activeId === id;
+              const id = b?._id || b; const name = b?.name || 'Business'; const yes = activeId === id;
               return (
                 <button key={id} onClick={() => handleSwitch(id)}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors text-left',
-                    yes ? 'bg-blue-600/15 text-blue-400' : 'text-slate-400 hover:bg-[#111827] hover:text-slate-200'
-                  )}>
-                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', yes ? 'bg-blue-400' : 'bg-slate-600')} />
-                  <span className="font-medium truncate flex-1">{name}</span>
-                  {yes && <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-semibold">Active</span>}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: yes ? T.blueG : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s' }}
+                  onMouseEnter={e => { if (!yes) e.currentTarget.style.background = T.hover; }}
+                  onMouseLeave={e => { if (!yes) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: yes ? T.blue : T.t4, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: yes ? T.blue : T.t2, fontFamily: FONT, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                  {yes && <span style={{ fontSize: 9, color: T.blue, background: T.blueG, padding: '2px 6px', borderRadius: 999, fontWeight: 700 }}>Active</span>}
                 </button>
               );
             })}
-            <button
-              onClick={() => { navigate('/settings'); setBizOpen(false); onClose?.(); }}
-              className="w-full text-left text-xs text-blue-400 hover:text-blue-300 px-3 py-2 border-t border-[#1a2540] hover:bg-[#111827] transition-colors font-medium"
+            <button onClick={() => { navigate('/settings'); setBizOpen(false); onClose?.(); }}
+              style={{ width: '100%', padding: '9px 12px', background: 'transparent', border: 'none', borderTop: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left', fontSize: 12, color: T.blue, fontWeight: 600, fontFamily: FONT }}
+              onMouseEnter={e => e.currentTarget.style.background = T.hover}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               + Create New Business
             </button>
@@ -116,48 +120,32 @@ function SidebarContent({ onClose }) {
         )}
       </div>
 
-      {/* Nav links */}
-      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }} className="px-3 py-3">
-        <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-2">Menu</p>
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={() => onClose?.()}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors mb-0.5',
-                isActive
-                  ? 'nav-active'
-                  : 'text-slate-400 hover:text-slate-100 hover:bg-[#111827]'
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <Icon size={15} className={cn('flex-shrink-0', isActive ? 'text-blue-400' : 'text-slate-500')} />
-                <span>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+        <p style={{ fontSize: 9, fontWeight: 800, color: T.t4, textTransform: 'uppercase', letterSpacing: '0.12em', padding: '4px 12px 8px', fontFamily: FONT }}>Main</p>
+        {NAV.map(item => <NavItem key={item.to} {...item} />)}
+        <div style={{ height: 1, background: T.border, margin: '10px 4px' }} />
+        <p style={{ fontSize: 9, fontWeight: 800, color: T.t4, textTransform: 'uppercase', letterSpacing: '0.12em', padding: '4px 12px 8px', fontFamily: FONT }}>Manage</p>
+        {NAV2.map(item => <NavItem key={item.to} {...item} />)}
       </nav>
 
-      {/* User row */}
-      <div style={{ flexShrink: 0 }} className="px-3 py-3 border-t border-[#1a2540]">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-[#111827] transition-colors">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+      {/* User */}
+      <div style={{ padding: '10px', borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = T.hover}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#3b7eff,#9b6dff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
             {getInitials(user?.name || 'U')}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="text-xs font-semibold text-slate-200 truncate">{user?.name}</p>
-            <p className="text-[10px] text-slate-500 capitalize">{user?.role}</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: T.t1, fontFamily: FONT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
+            <p style={{ fontSize: 10, color: T.t3, textTransform: 'capitalize' }}>{user?.role}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-colors flex-shrink-0"
-            title="Logout"
-          >
+          <button onClick={handleLogout} style={{ padding: 6, border: 'none', background: 'transparent', color: T.t3, cursor: 'pointer', borderRadius: 7, display: 'flex', transition: 'all 0.15s', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.redG; e.currentTarget.style.color = T.red; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.t3; }}
+            title="Logout">
             <LogOut size={13} />
           </button>
         </div>
@@ -166,7 +154,6 @@ function SidebarContent({ onClose }) {
   );
 }
 
-/* ─── Root layout ───────────────────────────────────────────────── */
 export default function AppLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen,  setNotifOpen]  = useState(false);
@@ -174,154 +161,70 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
 
   return (
-    /*
-      Use 100dvh (dynamic viewport height) so mobile browsers
-      don't glitch when address bar shows/hides.
-      Fallback to 100vh for older browsers.
-    */
-    <div
-      style={{ display: 'flex', height: '100dvh', background: '#080c14', overflow: 'hidden' }}
-    >
-
-      {/* ── Desktop sidebar ─────────────────────────────────── */}
-      <aside
-        className="border-r border-[#1a2540]"
-        style={{
-          width: 220,
-          minWidth: 220,
-          flexShrink: 0,
-          background: '#0d1322',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-        }}
-      >
-        {/* Hide on mobile via inline media workaround — Tailwind hidden lg:flex */}
-        <div className="hidden lg:flex" style={{ flexDirection: 'column', height: '100%' }}>
-          <SidebarContent />
-        </div>
+    <div style={{ display: 'flex', height: '100dvh', background: T.base, overflow: 'hidden' }}>
+      {/* Desktop sidebar */}
+      <aside style={{ width: 210, minWidth: 210, flexShrink: 0, background: T.surface, borderRight: `1px solid ${T.border}`, height: '100%', display: 'flex', flexDirection: 'column' }}
+        className="hidden lg:flex">
+        <SidebarContent />
       </aside>
 
-      {/* ── Mobile sidebar overlay ───────────────────────────── */}
+      {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="lg:hidden"
-          style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex' }}
-        >
-          {/* Backdrop */}
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setMobileOpen(false)}
-          />
-          {/* Drawer */}
-          <aside
-            className="animate-slide-right"
-            style={{
-              position: 'relative', width: 260, height: '100%',
-              background: '#0d1322', borderRight: '1px solid #1a2540',
-              display: 'flex', flexDirection: 'column', zIndex: 1,
-            }}
-          >
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-400 hover:bg-[#111827] hover:text-white z-10 transition-colors"
-            >
-              <X size={15} />
+        <div className="lg:hidden" style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }} onClick={() => setMobileOpen(false)} />
+          <aside className="anim-slide-r" style={{ position: 'relative', width: 240, height: '100%', background: T.surface, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', zIndex: 1 }}>
+            <button onClick={() => setMobileOpen(false)} style={{ position: 'absolute', top: 12, right: 12, padding: 6, border: 'none', background: T.hover, borderRadius: 8, color: T.t2, cursor: 'pointer', display: 'flex', zIndex: 2 }}>
+              <X size={14} />
             </button>
             <SidebarContent onClose={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
 
-      {/* ── Main column ─────────────────────────────────────── */}
+      {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-
         {/* Header */}
-        <header
-          className="border-b border-[#1a2540]"
-          style={{
-            height: 56,
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '0 16px',
-            background: 'rgba(13,19,34,0.92)',
-            backdropFilter: 'blur(12px)',
-            zIndex: 30,
-          }}
-        >
-          {/* Mobile hamburger */}
-          <button
-            className="lg:hidden p-2 rounded-lg text-slate-400 hover:bg-[#111827] hover:text-white transition-colors"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu size={18} />
+        <header style={{ height: 52, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', background: 'rgba(11,14,26,0.9)', borderBottom: `1px solid ${T.border}`, backdropFilter: 'blur(16px)', zIndex: 30 }}>
+          <button className="lg:hidden" onClick={() => setMobileOpen(true)} style={{ padding: 7, border: 'none', background: 'transparent', color: T.t2, cursor: 'pointer', borderRadius: 8, display: 'flex' }}>
+            <Menu size={17} />
           </button>
 
           {/* Search */}
-          <div style={{ flex: 1, maxWidth: 300 }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#475569', pointerEvents: 'none' }} />
-              <input
-                type="text"
-                placeholder="Search..."
-                style={{
-                  width: '100%', background: '#111827', border: '1px solid #1a2540',
-                  borderRadius: 10, padding: '6px 12px 6px 32px',
-                  fontSize: 13, color: '#94a3b8',
-                  transition: 'border-color 0.15s',
-                }}
-                onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = '#1a2540'}
-              />
-            </div>
+          <div style={{ flex: 1, maxWidth: 280, position: 'relative' }}>
+            <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: T.t3, pointerEvents: 'none' }} />
+            <input placeholder="Search transactions, invoices..." style={{ width: '100%', background: T.card, border: `1px solid ${T.border}`, borderRadius: 9, padding: '6px 12px 6px 30px', fontSize: 12, color: T.t2, fontFamily: FONT, transition: 'all 0.15s' }}
+              onFocus={e => { e.target.style.borderColor = T.blue; e.target.style.background = T.surface; }}
+              onBlur={e  => { e.target.style.borderColor = T.border; e.target.style.background = T.card; }} />
           </div>
 
-          {/* Right controls */}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-            {/* Bell */}
-            <button
-              onClick={() => setNotifOpen(true)}
-              className="hover:bg-[#111827] transition-colors"
-              style={{ position: 'relative', padding: 8, borderRadius: 10, color: '#94a3b8' }}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+            {/* Notification bell */}
+            <button onClick={() => setNotifOpen(true)} style={{ position: 'relative', padding: 8, border: 'none', background: 'transparent', color: T.t2, cursor: 'pointer', borderRadius: 9, display: 'flex', transition: 'all 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = T.hover}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <Bell size={17} />
-              <span style={{
-                position: 'absolute', top: 8, right: 8,
-                width: 6, height: 6, borderRadius: '50%',
-                background: '#ef4444', border: '1.5px solid #080c14',
-              }} />
+              <Bell size={16} />
+              <span style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, borderRadius: '50%', background: T.red, border: `1.5px solid ${T.surface}` }} />
             </button>
 
-            {/* Avatar + name */}
-            <button
-              onClick={() => navigate('/settings')}
-              className="hover:bg-[#111827] transition-colors"
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 10 }}
+            {/* Avatar */}
+            <button onClick={() => navigate('/settings')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 9, transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = T.hover}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <div style={{
-                width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                background: 'linear-gradient(135deg,#3b82f6,#6366f1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10, fontWeight: 700, color: '#fff',
-              }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#3b7eff,#9b6dff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                 {getInitials(user?.name || 'U')}
               </div>
-              <span className="hidden sm:block" style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
-                {user?.name?.split(' ')[0]}
-              </span>
+              <span className="hidden sm:block" style={{ fontSize: 12, fontWeight: 600, color: T.t2, fontFamily: FONT }}>{user?.name?.split(' ')[0]}</span>
             </button>
           </div>
         </header>
 
-        {/* Page content — scrolls independently */}
         <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           {children}
         </main>
       </div>
 
-      {/* Notification panel */}
       <NotificationPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   );
